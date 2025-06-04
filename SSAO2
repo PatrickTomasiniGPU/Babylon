@@ -1,0 +1,43 @@
+let skybox = null;
+
+var createScene = function () {
+    var scene = new BABYLON.Scene(engine);
+
+    // Camera
+    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 2, 10), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+
+    // Ambient light
+    var hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 1.5;
+
+    // Enable PrePass renderer (required for SSAO2)
+    var prePassRenderer = scene.enablePrePassRenderer();
+
+    // Load the model
+    BABYLON.SceneLoader.Append("https://raw.githubusercontent.com/PatrickTomasiniGPU/Babylon/main/", "SalaOWW_RT_007.glb", scene, function () {
+        // When model is loaded, apply SSAO2
+
+        var ssao2 = new BABYLON.SSAO2RenderingPipeline("ssao2", scene, {
+            ssaoRatio: 0.5,
+            blurRatio: 0.5
+        });
+
+        // Configure SSAO2 properties (optional tuning)
+        ssao2.radius = 3;
+        ssao2.totalStrength = 1.5;
+        ssao2.expensiveBlur = true;
+        ssao2.samples = 32;
+
+        // Attach SSAO2 to the camera
+        scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline("ssao2", camera);
+
+        // Optional: Enhance quality with more samples (if supported)
+        if (ssao2._prePassRenderer) {
+            ssao2._prePassRenderer.samples = 4;
+        }
+    });
+
+    return scene;
+};
